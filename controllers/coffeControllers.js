@@ -1,32 +1,50 @@
-let coffe = require("../data");
+const { Coffe } = require("../db/models");
 
-exports.coffeCreate = (req,res)=> {
-    req.body.id= coffe[coffe.length-1].id+1
-    coffe.push(req.body);
-    res.status(201).json(req.body);
-}
-exports.coffeDelete = (req,res)=> {
-    const {coffeId} = req.params
-    const coffeFound = coffe.find((coff)=> coff.id === +coffeId
-    );
-    if(coffeFound){
-        coffe = coffe.filter((coff)=>coff !== coffeFound)
-        res.status(204).end()
-    } else {
-        res.status(404).json({message : " coffe id does not exist"})
-    }
-}
-exports.coffeDetail = (req,res)=>{
-    const foundCoffe = coffe.find(
-        (coffe)=> coffe.id === +req.params.coffeId
-    );
-    if(foundCoffe){
-        res.json(foundCoffe)
-    } else {
-        res.status(404).json({ message : "Page Not Found"}).end();
-        
-    }
-}
-exports.coffeList = (req,res)=> {
-    res.json(coffe);
-}
+exports.fetchCoffe = async (coffeId, next) => {
+  try {
+    const foundCoffe = await Coffe.findByPk(coffeId);
+    console.log(foundCoffe);
+    return foundCoffe;
+  } catch (error) {
+    next(error);
+  }
+};
+exports.coffeCreate = async (req, res, next) => {
+  try {
+    const newCoffe = await Coffe.create(req.body);
+    res.status(201).json(newCoffe);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.coffeDelete = async (req, res, next) => {
+  try {
+    await req.coffe.destroy();
+    res.status(404).end();
+  } catch (error) {
+    next(error);
+  }
+};
+exports.coffeDetail = (req, res) => res.json(req.coffe);
+
+exports.coffeList = async (req, res, next) => {
+  try {
+    const coffes = await Coffe.findAll({
+      attributes: {
+        exclude: ["updatedAt", "createdAt"],
+      },
+    });
+    res.json(coffes);
+  } catch (error) {
+    next(error);
+  }
+  //3end attributes ["id", "name"], without putting anything in attributes exclude: ["updatedAt","createdAt"]
+};
+exports.coffeUpdate = async (req, res, next) => {
+  try {
+    await req.coffe.update(req.body);
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
